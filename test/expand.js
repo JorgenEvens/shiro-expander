@@ -298,4 +298,18 @@ describe('expand', function() {
         })
     })
 
+    it('should expand correctly', function(done) {
+        expander.createRule('file', 'user', function(rule, ids, cb) {
+            cb(null, 15);
+        });
+
+        expander.expand('file:write:{user:10}', function(err, result) {
+            if( err ) return done(err);
+            assert.deepEqual(result, [
+                'file:write:15'
+            ], 'file:write:{user:10}');
+            done();
+        })
+    })
+
 });

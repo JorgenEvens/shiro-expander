@@ -124,6 +124,8 @@ ShiroExpander.prototype.expand = function(rule, cb) {
     var replacer = function(m, k1, v1, base, k2, v2) {
         var key = k1 || k2;
         var value = v1 || v2;
+        var isConstant = self._replaceConstants(value) == value;
+        var replacement = (base || '') + EXPRESSION_REPLACEMENT;
 
         /**
          * If `base` is set it means we have a rule in the form of
@@ -135,8 +137,7 @@ ShiroExpander.prototype.expand = function(rule, cb) {
          * If value is a constant or EXPRESSION_REPLACEMENT we need to do
          * one more processing step. Afterwards we are `done`.
          */
-        if( base && value != EXPRESSION_REPLACEMENT &&
-            self._replaceConstants(value) == value ) {
+        if( base && isConstant && value != EXPRESSION_REPLACEMENT ) {
             return m;
         } else if( base ) {
             next = done;
@@ -146,6 +147,11 @@ ShiroExpander.prototype.expand = function(rule, cb) {
             ids = [ self._replaceConstants(value) ];
             parent = key;
             child = value;
+
+            if( isConstant ) {
+                resolveResult(null, ids);
+                return replacement;
+            }
         } else {
             child = parent;
             parent = key;
@@ -158,7 +164,7 @@ ShiroExpander.prototype.expand = function(rule, cb) {
 
         shiroRule.execute(ids, resolveResult);
 
-        return (base || '') + EXPRESSION_REPLACEMENT;
+        return replacement;
     };
 
     var done = function() {
@@ -191,7 +197,7 @@ ShiroExpander.prototype.expand = function(rule, cb) {
 
         rule = rule.replace(/\{([^:]+):([^\{\}]+)\}|^(([^:]+):[^:]+:)([^:]+)$/, replacer);
 
-        if( temp == rule )
+        if( next != done && temp == rule )
             done();
     }
 
