@@ -22,7 +22,15 @@ module.exports = function(grunt) {
 
         eslint: {
             source: [ 'src/**/*.js' ],
-            tests: [ 'test/**/*.js' ]
+            tests: [ 'test/**/*.js' ],
+            examples: {
+                src: [ 'examples/**/*.js' ],
+                options: {
+                    rules: {
+                        'no-console': 0
+                    }
+                }
+            }
         }
     })
 
