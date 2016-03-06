@@ -1,5 +1,5 @@
 {
-  "name": "shiro-expand",
+  "name": "shiro-expander",
   "version": "0.1.0",
   "description": "Extends Apache Shiro expression such that permissions can be dynamically expanded.",
   "main": "src/index.js",
