@@ -18,12 +18,18 @@ module.exports = function(grunt) {
                 coverage: true,
                 coverageFolder: 'coverage'
             }
+        },
+
+        eslint: {
+            source: [ 'src/**/*.js' ],
+            tests: [ 'test/**/*.js' ]
         }
     })
 
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-eslint');
 
-    grunt.registerTask('test', 'mocha_istanbul');
+    grunt.registerTask('test', ['mocha_istanbul', 'eslint']);
     grunt.registerTask('default', 'watch');
 }

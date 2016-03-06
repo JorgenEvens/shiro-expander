@@ -185,7 +185,7 @@ describe('expand', function() {
 
         expander.constants['me'] = 10;
 
-        expander.expand('file:write:me', function(err, result) {
+        expander.expand('file:write:me', function(err /* , result */) {
             assert(err, 'Should forward the error');
             done();
         })
@@ -211,7 +211,7 @@ describe('expand', function() {
             cb(null, [15]);
         });
 
-        expander.constants = function(constant) {
+        expander.constants = function(/* constant */) {
             return 10;
         }
 
@@ -263,7 +263,7 @@ describe('expand', function() {
     it('should throw on invalid type on left side of relation', function(done) {
         expander.constants['me'] = 10;
 
-        expander.expand('file:write:me', function(err, result) {
+        expander.expand('file:write:me', function(err /* , result */) {
             assert(err);
             done();
         })
@@ -276,7 +276,7 @@ describe('expand', function() {
 
         expander.constants['me'] = 10;
 
-        expander.expand('file:write:me', function(err, result) {
+        expander.expand('file:write:me', function(err /* , result */) {
             assert(err);
             done();
         })
@@ -292,7 +292,7 @@ describe('expand', function() {
 
         expander.constants['me'] = 10;
 
-        expander.expand('file:write:me', function(err, result) {
+        expander.expand('file:write:me', function(err /* , result */) {
             assert(err);
             done();
         })
