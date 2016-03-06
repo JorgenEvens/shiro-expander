@@ -2,6 +2,10 @@
 
 Summarize Apache Shiro statements by expressing them using relations between different entities.
 
+## Installation
+
+`npm install --save shiro-expander`
+
 ## Syntax
 
 This library allows statements to be summarized into a single statement, the syntax for such a summarized statement is
@@ -72,3 +76,16 @@ file -> me
 equals
 file -> user -> organization -> me
 ```
+
+## Examples
+
+Examples are available in the [examples](examples) folder of this repository.
+
+## Contribution
+
+Feel free to send me a Pull Request / Issue if you think something is broken or can be improved upon.
+
+To run tests locally you simple run `npm test`
+
+If you are making changes to the library `grunt watch` will keep your changes in check
+with coding style and run the unit tests to ensure nothing breaks.
