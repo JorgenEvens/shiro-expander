@@ -4,12 +4,15 @@ module.exports = function(grunt) {
     grunt.initConfig({
         watch: {
             test: {
-                files: ['**/*.js'],
+                files: ['src/**/*.js', 'test/**/*.js'],
                 tasks: ['test']
             }
         },
 
         'mocha_istanbul': {
+            options: {
+                reportFormats: ['html']
+            },
             library: {
                 src: 'test',
                 coverage: true,

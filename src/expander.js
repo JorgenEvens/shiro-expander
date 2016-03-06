@@ -2,9 +2,13 @@
 
 var ShiroRule = require('./rule');
 
-function ShiroExpander(options) {
+var EXPRESSION_REPLACEMENT = '-';
 
-    this._options = options || {};
+function ShiroExpander(options) {
+    options = options || {};
+
+    this._options = options;
+    this.constants = options.constants || {};
 
     this._reverseIndex = {};
     this._index = {};
@@ -46,16 +50,16 @@ ShiroExpander.prototype._createReverseIndex = function(parent, child, rule) {
 
 ShiroExpander.prototype._combineRules = function(parentRule, childRule) {
     var resolver =  function(rule, ids, cb) {
-        var executeChild = function(err, resultingIds) {
+        var executeParent = function(err, resultingIds) {
             if( err ) return cb(err);
 
             if( !Array.isArray(resultingIds) )
                 resultingIds = [ resultingIds ];
 
-            childRule.execute(resultingIds, cb);
+            parentRule.execute(resultingIds, cb);
         }
 
-        parentRule.execute(ids, executeChild);
+        childRule.execute(ids, executeParent);
     };
 
     resolver.isGenerated = true;
@@ -89,6 +93,18 @@ ShiroExpander.prototype._fromIndex = function(parent, child) {
     return index[parent][child] || null;
 }
 
+ShiroExpander.prototype._replaceConstants = function(constant) {
+    var mapper = this.constants;
+
+    if( typeof mapper === 'function' )
+        return mapper(constant);
+
+    if( typeof mapper === 'object' )
+        return mapper[constant] || constant;
+
+    return constant;
+}
+
 ShiroExpander.prototype.expand = function(rule, cb) {
     var self = this;
     var ids = null;
@@ -105,13 +121,29 @@ ShiroExpander.prototype.expand = function(rule, cb) {
         setTimeout(next, 0);
     }
 
-    var replacer = function(m, key, value) {
-        if( m == 'me' ) {
-            ids = 10;
-            parent = 'me';
-            child = 'me';
-        } else if( child == null && parent == null ) {
-            ids = value;
+    var replacer = function(m, k1, v1, base, k2, v2) {
+        var key = k1 || k2;
+        var value = v1 || v2;
+
+        /**
+         * If `base` is set it means we have a rule in the form of
+         * `object:action:(id|constant|-)`.
+         *
+         * If value does not translate to a constant we set it as an id,
+         * which needs not further processing.
+         *
+         * If value is a constant or EXPRESSION_REPLACEMENT we need to do
+         * one more processing step. Afterwards we are `done`.
+         */
+        if( base && value != EXPRESSION_REPLACEMENT &&
+            self._replaceConstants(value) == value ) {
+            return m;
+        } else if( base ) {
+            next = done;
+        }
+
+        if( child == null && parent == null ) {
+            ids = [ self._replaceConstants(value) ];
             parent = key;
             child = value;
         } else {
@@ -126,15 +158,20 @@ ShiroExpander.prototype.expand = function(rule, cb) {
 
         shiroRule.execute(ids, resolveResult);
 
-        return '-';
+        return (base || '') + EXPRESSION_REPLACEMENT;
     };
 
     var done = function() {
+        var regex = new RegExp(EXPRESSION_REPLACEMENT + '$');
+
+        if( !regex.test(rule) )
+            return cb(null, [ rule ]);
+
         var result = [];
         var i = ids.length;
 
         while( i-- ) {
-            result.unshift(rule.replace(/-$/, ids[i]));
+            result.unshift(rule.replace(regex, ids[i]));
         }
 
         cb(null, result);
@@ -143,7 +180,16 @@ ShiroExpander.prototype.expand = function(rule, cb) {
     var next = function() {
         var temp = rule;
 
-        rule = rule.replace(/\{([^:]+):([^\{\}]+)\}|me/, replacer);
+        /**
+         *
+         * Matches expressions such as {user:me} and {user:10}
+         * \{([^:]+):([^\{\}]+)\}
+         *
+         * Matches expressions at root such as file:write:me
+         * ^([^:]+):[^:]+:([^:]+)$
+         */
+
+        rule = rule.replace(/\{([^:]+):([^\{\}]+)\}|^(([^:]+):[^:]+:)([^:]+)$/, replacer);
 
         if( temp == rule )
             done();

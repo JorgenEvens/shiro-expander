@@ -7,6 +7,7 @@ function ShiroRule(parent, child, resolver) {
 }
 
 ShiroRule.prototype.execute = function(ids, cb) {
+    // console.log('ShiroRule[' + this._parent + ',' + this._child + ']:', ids);
     this._resolver(this, ids, cb);
 }
 
