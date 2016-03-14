@@ -83,6 +83,69 @@ describe('expand', function() {
         })
     })
 
+
+    it('should expand an expression correctly when added in reverse', function(done) {
+        var callbacks = 3;
+        var go = function(err) {
+            if( err ) {
+                go = function() {};
+                done(err);
+                return;
+            }
+
+            if( --callbacks == 0 )
+                done();
+        };
+
+        expander.createRule('organization', 'me', function(rule, ids, cb) {
+            cb(null, [29, 30]);
+        });
+        expander.createRule('user', 'organization', function(rule, ids, cb) {
+            cb(null, [26, 27, 28]);
+        });
+        expander.createRule('file', 'user', function(rule, ids, cb) {
+            cb(null, [23, 24, 25]);
+        });
+        expander.createRule('me', 'me', function(rule, ids, cb) {
+            cb(null, 31);
+        })
+
+        expander.constants['me'] = 99;
+
+        expander.expand('file:write:{user:{organization:me}}', function(err, result) {
+            if( err ) go(err);
+
+            assert.deepEqual(result, [
+                'file:write:23',
+                'file:write:24',
+                'file:write:25'
+            ], 'file:write:{user:{organization:me}}');
+            go();
+        });
+
+        expander.expand('file:write:{user:me}', function(err, result) {
+            if( err ) go(err);
+
+            assert.deepEqual(result, [
+                'file:write:23',
+                'file:write:24',
+                'file:write:25'
+            ], 'file:write:{user:me}');
+            go();
+        });
+
+        expander.expand('file:write:{organization:me}', function(err, result) {
+            if( err ) go(err);
+
+            assert.deepEqual(result, [
+                'file:write:23',
+                'file:write:24',
+                'file:write:25'
+            ], 'file:write:{organization:me}');
+            go();
+        })
+    })
+
     it('should expand a basic expression correctly', function(done) {
         var callbacks = 2;
         var go = function(err) {

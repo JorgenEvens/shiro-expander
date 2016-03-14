@@ -4,6 +4,16 @@ var ShiroRule = require('./rule');
 
 var EXPRESSION_REPLACEMENT = '-';
 
+var obj2arr = function(obj) {
+    var result = [];
+    var i = null;
+
+    for( i in obj )
+        result.push(obj[i]);
+
+    return result;
+}
+
 function ShiroExpander(options) {
     options = options || {};
 
@@ -67,6 +77,11 @@ ShiroExpander.prototype._combineRules = function(parentRule, childRule) {
 }
 
 ShiroExpander.prototype._expandGraph = function(parent, child, newRule) {
+    this._expandLeft(parent, child, newRule);
+    this._expandRight(parent, child, newRule);
+}
+
+ShiroExpander.prototype._expandLeft = function(parent, child, newRule) {
     var matches = this._reverseIndex[parent];
     var i = matches ? matches.length : 0;
     var match = null;
@@ -82,6 +97,23 @@ ShiroExpander.prototype._expandGraph = function(parent, child, newRule) {
 
         this.createRule(source, child, this._combineRules(rule, newRule));
     }
+}
+
+ShiroExpander.prototype._expandRight = function(parent, child, newRule) {
+    var matches = obj2arr(this._index[child]);
+    var i = matches ? matches.length : 0;
+    var target = null;
+    var rule = null;
+
+    while( i-- ) {
+        rule = matches[i];
+        target = rule._child;
+
+        if( this._index[parent][target] ) continue;
+
+        this.createRule(parent, target, this._combineRules(newRule, rule));
+    }
+
 }
 
 ShiroExpander.prototype._fromIndex = function(parent, child) {
